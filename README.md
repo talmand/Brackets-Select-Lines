@@ -23,4 +23,4 @@ Things to do
 =====
 Allow for easier selecting of single line.
 Research ways to prevent scrollbar jumping.
-Code folding?
+Fix editor focus problem.
