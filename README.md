@@ -1,5 +1,4 @@
 Please note, this extension is out of date and no longer being updated!
-===
 
 Brackets Select Line extension
 ===
