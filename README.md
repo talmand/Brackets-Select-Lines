@@ -1,3 +1,6 @@
+Please note, this extension is out of date and no longer being updated!
+===
+
 Brackets Select Line extension
 ===
 Simple extension to allow selecting lines by clicking and dragging along the editor gutter.
