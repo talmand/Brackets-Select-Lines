@@ -78,13 +78,15 @@ define(function (require, exports, module) {
         editor = EditorManager.getCurrentFullEditor();
         document = DocumentManager.getCurrentDocument();
         
-        editor._codeMirror.off('gutterClick', action);
-        editor._codeMirror.off('keydown', keyDown);
-        editor._codeMirror.off('keyup', keyUp);
-        
-        editor._codeMirror.on('gutterClick', action);
-        editor._codeMirror.on('keydown', keyDown);
-        editor._codeMirror.on('keyup', keyUp);
+        if (editor) {
+            editor._codeMirror.off('gutterClick', action);
+            editor._codeMirror.off('keydown', keyDown);
+            editor._codeMirror.off('keyup', keyUp);
+            
+            editor._codeMirror.on('gutterClick', action);
+            editor._codeMirror.on('keydown', keyDown);
+            editor._codeMirror.on('keyup', keyUp);
+        }
         
     }
     
