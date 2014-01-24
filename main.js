@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2012 Travis Almand. All rights reserved.
+* Copyright (c) 2014 Travis Almand. All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a
 * copy of this software and associated documentation files (the "Software"),
@@ -27,56 +27,68 @@ define(function (require, exports, module) {
     
     'use strict';
     
-    var CommandManager = brackets.getModule("command/CommandManager"),
-        EditorManager = brackets.getModule("editor/EditorManager"),
-        DocumentManager = brackets.getModule("document/DocumentManager"),
-        ExtensionUtils  = brackets.getModule("utils/ExtensionUtils");
+    var AppInit         = brackets.getModule('utils/AppInit'),
+        EditorManager   = brackets.getModule('editor/EditorManager'),
+        DocumentManager = brackets.getModule('document/DocumentManager');
     
-    var lineNumbers = [];
+    var editor, document, selecting, selectedLines;
     
-    function compareNumbers(a, b) { return a - b; }
-    function stopSelecting() {
-        $(".CodeMirror-gutter-text").off("mouseover").off("hover");
-        lineNumbers = [];
+    function action(instance, line, gutter, event) {
+        
+        if (selecting) {            
+            if (selectedLines.length === 0) { // first click
+                selectedLines.push(line);
+                editor._codeMirror.setSelection({line: line, ch: 0}, {line: line, ch: null});
+            } else if (selectedLines.length === 1) { // second click
+                selectedLines.push(line);
+                if (selectedLines[0] < selectedLines[1]) {
+                    editor._codeMirror.setSelection({line: selectedLines[0], ch: 0}, {line: selectedLines[1], ch: null});
+                } else {
+                    editor._codeMirror.setSelection({line: selectedLines[0], ch: null}, {line: selectedLines[1], ch: 0});
+                }
+                selectedLines.splice(1, 1);
+            } else {
+                // something's gone wrong somewhere, start over
+                selectedLines = [];
+            }
+        }
+        
     }
     
-    $(".CodeMirror-gutter-text").on("mousedown", "pre", function (e) {
+    function keyDown(instance, event) {
         
-        // grab the first line on that initial click
-        lineNumbers.push(parseInt($(e.target).text(), 10));
-       
-        $(".CodeMirror-gutter-text").on("mouseover", "pre", function (e) {
-            
-            // check to see if line number is already in the mix
-            var i, lineNumbersLength = lineNumbers.length, $target = $(e.target), match = false;
-            for (i = 0; i < lineNumbersLength; i++) {
-                if (i === $target.text()) {
-                    match = true;
-                    break;
-                }
-            }
-            
-            // insert new line numbers and sort each time
-            // we need them properly sorted to properly select the lines
-            if (!match) {
-                lineNumbers.push(parseInt($target.text(), 10));
-                lineNumbers.sort(compareNumbers);
-            }
-            
-            // establish start and end points
-            // select those lines
-            var startLine = lineNumbers[0] - 1;
-            var endLine = lineNumbers[lineNumbersLength] - 1;
-            var endLineLength = DocumentManager.getCurrentDocument().getLine(endLine).length;
-            EditorManager.getCurrentFullEditor()._codeMirror.setSelection({line: startLine, ch: 0}, {line: endLine, ch: endLineLength});
-            
-        });
+        if (event.keyIdentifier === 'Shift') {
+            selecting = true;
+        }
         
-    // here we cover letting go of mouse button and leaving gutter
-    // this doesn't work if cursor leaves gutter if mouse is still down
-    }).on("mouseup", "pre", stopSelecting);
+    }
     
-    // this fixes cursor leaving gutter with mouse down problem
-    $("#sidebar, .CodeMirror-lines").on("mouseover", stopSelecting);
+    function keyUp(instance, event) {
+        
+        selecting = false;
+        selectedLines = [];
+        
+    }
+    
+    function update() {
+        
+        selecting = false;
+        selectedLines = [];
+        
+        editor = EditorManager.getCurrentFullEditor();
+        document = DocumentManager.getCurrentDocument();
+        
+        editor._codeMirror.off('gutterClick', action);
+        editor._codeMirror.off('keydown', keyDown);
+        editor._codeMirror.off('keyup', keyUp);
+        
+        editor._codeMirror.on('gutterClick', action);
+        editor._codeMirror.on('keydown', keyDown);
+        editor._codeMirror.on('keyup', keyUp);
+        
+    }
+    
+    AppInit.appReady(update);
+    $(DocumentManager).on('currentDocumentChange', update);
     
 });
