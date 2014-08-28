@@ -31,61 +31,74 @@ define(function (require, exports, module) {
         EditorManager   = brackets.getModule('editor/EditorManager'),
         DocumentManager = brackets.getModule('document/DocumentManager');
     
-    var editor, document, selecting, selectedLines;
+    var editor, startLine;
     
     function action(instance, line, gutter, event) {
         
-        if (selecting) {            
-            if (selectedLines.length === 0) { // first click
-                selectedLines.push(line);
-                editor._codeMirror.setSelection({line: line, ch: 0}, {line: line, ch: null});
-            } else if (selectedLines.length === 1) { // second click
-                selectedLines.push(line);
-                if (selectedLines[0] < selectedLines[1]) {
-                    editor._codeMirror.setSelection({line: selectedLines[0], ch: 0}, {line: selectedLines[1], ch: null});
+        var anchor = {line: line, ch: 0};
+        var head = {line: line, ch: null};
+        var cursor = instance.getCursor();
+        
+        startLine = line;
+        
+        if (!event.ctrlKey && !event.shiftKey) {
+            instance.setSelection(anchor, head);
+        } else if (event.ctrlKey) {
+            instance.addSelection(anchor, head);
+        } else if (event.shiftKey) {
+            var oldLine = cursor.line;
+            var newLine = instance.lineAtHeight(event.pageY);
+            
+            if (instance.somethingSelected()) {
+                if (newLine > oldLine) {
+                    instance.extendSelection({line: newLine, ch: 0});
                 } else {
-                    editor._codeMirror.setSelection({line: selectedLines[0], ch: null}, {line: selectedLines[1], ch: 0});
+                    instance.extendSelection(
+                        {line: newLine, ch: 0},
+                        {line: oldLine, ch: null}
+                    );
                 }
-                selectedLines.splice(1, 1);
             } else {
-                // something's gone wrong somewhere, start over
-                selectedLines = [];
+                instance.setSelection(
+                    {line: cursor.line, ch: cursor.ch},
+                    {line: newLine, ch: null}
+                );
             }
         }
         
-    }
-    
-    function keyDown(instance, event) {
+        var lineSelecting = function (e) {
+            var newLine = instance.lineAtHeight(e.pageY);
+            
+            if (!event.ctrlKey) {
+                instance.setSelection(
+                    {line: startLine, ch: startLine < newLine ? 0 : null},
+                    {line: newLine, ch: startLine < newLine ? null : 0}
+                );
+            } else {
+                instance.addSelection(
+                    {line: startLine, ch: startLine < newLine ? 0 : null},
+                    {line: newLine, ch: startLine < newLine ? null : 0}
+                );
+            }
+        };
         
-        if (event.keyIdentifier === 'Shift') {
-            selecting = true;
-        }
+        var lineSelectStop = function (e) {
+            $('body').off('mousemove', lineSelecting).off('mousemove', lineSelecting);
+            startLine = null;
+        };
         
-    }
-    
-    function keyUp(instance, event) {
-        
-        selecting = false;
-        selectedLines = [];
+        $('body').on('mousemove', lineSelecting).on('mouseup', lineSelectStop);
         
     }
     
     function update() {
         
-        selecting = false;
-        selectedLines = [];
+        startLine = null;
         
         editor = EditorManager.getCurrentFullEditor();
-        document = DocumentManager.getCurrentDocument();
         
         if (editor) {
-            editor._codeMirror.off('gutterClick', action);
-            editor._codeMirror.off('keydown', keyDown);
-            editor._codeMirror.off('keyup', keyUp);
-            
             editor._codeMirror.on('gutterClick', action);
-            editor._codeMirror.on('keydown', keyDown);
-            editor._codeMirror.on('keyup', keyUp);
         }
         
     }
