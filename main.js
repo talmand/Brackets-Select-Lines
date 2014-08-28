@@ -41,28 +41,30 @@ define(function (require, exports, module) {
         
         startLine = line;
         
-        if (!event.ctrlKey && !event.shiftKey) {
-            instance.setSelection(anchor, head);
-        } else if (event.ctrlKey) {
-            instance.addSelection(anchor, head);
-        } else if (event.shiftKey) {
-            var oldLine = cursor.line;
-            var newLine = instance.lineAtHeight(event.pageY);
-            
-            if (instance.somethingSelected()) {
-                if (newLine > oldLine) {
-                    instance.extendSelection({line: newLine, ch: 0});
+        if (gutter === 'CodeMirror-linenumbers') {
+            if (!event.ctrlKey && !event.shiftKey) {
+                instance.setSelection(anchor, head);
+            } else if (event.ctrlKey) {
+                instance.addSelection(anchor, head);
+            } else if (event.shiftKey) {
+                var oldLine = cursor.line;
+                var newLine = instance.lineAtHeight(event.pageY);
+
+                if (instance.somethingSelected()) {
+                    if (newLine > oldLine) {
+                        instance.extendSelection({line: newLine, ch: 0});
+                    } else {
+                        instance.extendSelection(
+                            {line: newLine, ch: 0},
+                            {line: oldLine, ch: null}
+                        );
+                    }
                 } else {
-                    instance.extendSelection(
-                        {line: newLine, ch: 0},
-                        {line: oldLine, ch: null}
+                    instance.setSelection(
+                        {line: cursor.line, ch: cursor.ch},
+                        {line: newLine, ch: null}
                     );
                 }
-            } else {
-                instance.setSelection(
-                    {line: cursor.line, ch: cursor.ch},
-                    {line: newLine, ch: null}
-                );
             }
         }
         
