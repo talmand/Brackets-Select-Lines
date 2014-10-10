@@ -28,6 +28,7 @@ define(function (require, exports, module) {
     'use strict';
     
     var AppInit         = brackets.getModule('utils/AppInit'),
+        ExtensionUtils  = brackets.getModule("utils/ExtensionUtils"),
         EditorManager   = brackets.getModule('editor/EditorManager'),
         DocumentManager = brackets.getModule('document/DocumentManager');
     
@@ -104,6 +105,8 @@ define(function (require, exports, module) {
         }
         
     }
+    
+    ExtensionUtils.loadStyleSheet(module, "style.css");
     
     AppInit.appReady(update);
     $(DocumentManager).on('currentDocumentChange', update);
