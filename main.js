@@ -27,11 +27,14 @@ define(function (require, exports, module) {
     
     'use strict';
     
-    var AppInit         = brackets.getModule('utils/AppInit'),
-        EditorManager   = brackets.getModule('editor/EditorManager'),
-        DocumentManager = brackets.getModule('document/DocumentManager');
+    var AppInit = brackets.getModule('utils/AppInit'),
+        EditorManager = brackets.getModule('editor/EditorManager'),
+        ThemeManager = brackets.getModule('view/ThemeManager'),
+        MainViewManager = brackets.getModule('view/MainViewManager'),
+        PreferencesManager = brackets.getModule('preferences/PreferencesManager'),
+        prefs = PreferencesManager.getExtensionPrefs('themes');
     
-    var editor, startLine;
+    var editor, startLine, oldPos, lineColor;
     
     function action(instance, line, gutter, event) {
         
@@ -93,19 +96,55 @@ define(function (require, exports, module) {
         
     }
     
+    function gutterMove(e) {
+        if (oldPos) {
+            editor._codeMirror.removeLineClass(oldPos.line, 'background', 'ta_gutterLine');
+        }
+        var pos = editor._codeMirror.coordsChar({left: e.clientX, top: e.clientY});
+        oldPos = pos;
+        editor._codeMirror.addLineClass(pos.line, 'background', 'ta_gutterLine');
+    }
+    
+    function gutterEnter() {
+        $('.CodeMirror-gutters').on('mousemove', gutterMove);
+    }
+    
+    function gutterLeave() {
+        $('.CodeMirror-gutters').off('mousemove', gutterMove);
+        if (oldPos) {
+            editor._codeMirror.removeLineClass(oldPos.line, 'background', 'ta_gutterLine');
+        }
+    }
+    
+    function getColor() {
+        // delay to ensure theme color is stored
+        var delay = window.setTimeout(function () {
+            $('#editor-holder').find('.CodeMirror').append('<div id="ta_tempColorGetter" class="CodeMirror-selected"></div>');
+
+            lineColor = $('#ta_tempColorGetter').css('background-color');
+
+            $('head').append('<style id="ta_customCSS">.ta_gutterLine { background-color: ' + lineColor + '; }</style>');
+            
+            $('#ta_tempColorGetter').remove();
+        }, 1000);
+    }
+    
     function update() {
-        
         startLine = null;
         
         editor = EditorManager.getCurrentFullEditor();
         
         if (editor) {
             editor._codeMirror.on('gutterClick', action);
+            $('.CodeMirror-gutters')
+                .on('mouseenter', gutterEnter)
+                .on('mouseleave', gutterLeave);
         }
-        
     }
     
-    AppInit.appReady(update);
-    $(DocumentManager).on('currentDocumentChange', update);
+    AppInit.appReady(function () {
+        getColor();
+        $(MainViewManager).on('currentFileChange', update);
+    });
     
 });
