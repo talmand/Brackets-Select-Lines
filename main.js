@@ -29,10 +29,7 @@ define(function (require, exports, module) {
     
     var AppInit = brackets.getModule('utils/AppInit'),
         EditorManager = brackets.getModule('editor/EditorManager'),
-        ThemeManager = brackets.getModule('view/ThemeManager'),
-        MainViewManager = brackets.getModule('view/MainViewManager'),
-        PreferencesManager = brackets.getModule('preferences/PreferencesManager'),
-        prefs = PreferencesManager.getExtensionPrefs('themes');
+        MainViewManager = brackets.getModule('view/MainViewManager');
     
     var editor, startLine, oldPos, lineColor;
     
