@@ -36,8 +36,6 @@ define(function (require, exports, module) {
     function action(instance, line, gutter, event) {
         
         var anchor = {line: line, ch: 0};
-        // var head = {line: line, ch: null};
-        // Change to head will highlight the full line with a single-click on a line number in the gutter
         var head = {line: line + 1, ch: 0};
         var cursor = instance.getCursor();
         
@@ -54,11 +52,13 @@ define(function (require, exports, module) {
 
                 if (instance.somethingSelected()) {
                     if (newLine > oldLine) {
-                        instance.extendSelection({line: newLine, ch: 0});
+                        console.log('newline');
+                        instance.extendSelection({line: newLine + 1, ch: 0});
                     } else {
+                        console.log('oldline');
                         instance.extendSelection(
                             {line: newLine, ch: 0},
-                            {line: oldLine, ch: null}
+                            {line: oldLine, ch: 0}
                         );
                     }
                 } else {
@@ -74,17 +74,15 @@ define(function (require, exports, module) {
             var newLine = instance.lineAtHeight(e.pageY);
             
             if (newLine > startLine) {
-                // This should keep the highlighting correct when highlighting downards
                 newLine += 1;
             } else if (newLine < startLine && startLine === newLine + 1) {
-                // This should keep the highlighting correct when highlighting upwards
                 startLine += 1;
             }
             
             if (!event.ctrlKey) {
                 instance.setSelection(
-                    {line: startLine, ch: 0 }, //startLine < newLine ? 0 : null},
-                    {line: newLine, ch: 0 } //startLine < newLine ? null : 0}
+                    {line: startLine, ch: 0 },
+                    {line: newLine, ch: 0 }
                 );
             } else {
                 instance.addSelection(
