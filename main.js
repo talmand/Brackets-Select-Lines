@@ -52,10 +52,8 @@ define(function (require, exports, module) {
 
                 if (instance.somethingSelected()) {
                     if (newLine > oldLine) {
-                        console.log('newline');
                         instance.extendSelection({line: newLine + 1, ch: 0});
                     } else {
-                        console.log('oldline');
                         instance.extendSelection(
                             {line: newLine, ch: 0},
                             {line: oldLine, ch: 0}
