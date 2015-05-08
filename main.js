@@ -38,10 +38,11 @@ define(function (require, exports, module) {
         var anchor = {line: line, ch: 0};
         var head = {line: line + 1, ch: 0};
         var cursor = instance.getCursor();
+        var active = $(event.target).parents('.view-pane').hasClass('active-pane');
         
         startLine = line;
         
-        if (gutter === 'CodeMirror-linenumbers') {
+        if (gutter === 'CodeMirror-linenumbers' && active) {
             if (!event.ctrlKey && !event.shiftKey) {
                 instance.setSelection(anchor, head);
             } else if (event.ctrlKey) {
@@ -95,17 +96,21 @@ define(function (require, exports, module) {
             startLine = null;
         };
         
-        $('body').on('mousemove', lineSelecting).on('mouseup', lineSelectStop);
+        if (active) {
+            $('body').on('mousemove', lineSelecting).on('mouseup', lineSelectStop);
+        }
         
     }
     
     function gutterMove(e) {
-        if (oldPos) {
-            editor._codeMirror.removeLineClass(oldPos.line, 'background', 'ta_gutterLine');
+        if ($(e.target).parents('.view-pane').hasClass('active-pane')) {
+            if (oldPos) {
+                editor._codeMirror.removeLineClass(oldPos.line, 'background', 'ta_gutterLine');
+            }
+            var pos = editor._codeMirror.coordsChar({left: e.clientX, top: e.clientY});
+            oldPos = pos;
+            editor._codeMirror.addLineClass(pos.line, 'background', 'ta_gutterLine');
         }
-        var pos = editor._codeMirror.coordsChar({left: e.clientX, top: e.clientY});
-        oldPos = pos;
-        editor._codeMirror.addLineClass(pos.line, 'background', 'ta_gutterLine');
     }
     
     function gutterEnter() {
