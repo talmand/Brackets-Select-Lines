@@ -26,6 +26,8 @@ The SHIFT functionality will not work while making additional selections in mult
 
 ### Things to do
 
+Match default Brackets behavior by highlighting gutter line numbers on selected lines.
+
 Update highlight color on theme change.
 
 Make SHIFT and CTRL functionality behave with each other?
